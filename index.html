@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Web Clock</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            font-family: 'Arial', sans-serif;
+            position: relative;
+        }
+
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .digital-section {
+            text-align: center;
+        }
+
+        #digital-clock {
+            font-size: 6em;
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+
+        #date, #day-of-week {
+            font-size: 1.5em;
+            color: #888;
+            margin: 5px 0;
+        }
+
+        .analog-clock {
+            width: 300px;
+            height: 300px;
+            border: 2px solid #333;
+            border-radius: 50%;
+            position: relative;
+            background-color: #222;
+        }
+
+        .hand {
+            position: absolute;
+            bottom: 50%;
+            left: 50%;
+            transform-origin: bottom center;
+        }
+
+        .hour-hand {
+            width: 4px;
+            height: 25%;
+            background-color: #fff;
+        }
+
+        .minute-hand {
+            width: 3px;
+            height: 35%;
+            background-color: #fff;
+        }
+
+        .second-hand {
+            width: 2px;
+            height: 40%;
+            background-color: #ff6b6b;
+        }
+
+        .center-dot {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background-color: #fff;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .settings-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            font-size: 24px;
+            padding: 10px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #2a2a2a;
+            padding: 30px;
+            border-radius: 15px;
+            min-width: 300px;
+            color: #fff;
+        }
+
+        .setting-group {
+            margin: 15px 0;
+        }
+
+        .setting-group h3 {
+            margin-bottom: 10px;
+            color: #888;
+        }
+
+        .setting-options {
+            display: flex;
+            gap: 10px;
+        }
+
+        .setting-btn {
+            background-color: #333;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .setting-btn.active {
+            background-color: #ff6b6b;
+        }
+
+        .setting-btn:hover {
+            background-color: #444;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        select {
+            background-color: #333;
+            color: #fff;
+            border: none;
+            padding: 8px;
+            border-radius: 5px;
+            width: 100%;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="digital-section">
+            <div id="date"></div>
+            <div id="day-of-week"></div>
+            <div id="digital-clock"></div>
+        </div>
+        
+        <div class="analog-clock">
+            <div class="hand hour-hand"></div>
+            <div class="hand minute-hand"></div>
+            <div class="hand second-hand"></div>
+            <div class="center-dot"></div>
+        </div>
+    </div>
+
+    <button class="settings-btn">⚙️</button>
+
+    <div class="modal">
+        <div class="modal-content">
+            <button class="close-modal">×</button>
+            <h2>設定</h2>
+
+            <div class="setting-group">
+                <h3>表示形式</h3>
+                <div class="setting-options">
+                    <button class="setting-btn active" data-display="both">両方</button>
+                    <button class="setting-btn" data-display="digital">デジタルのみ</button>
+                    <button class="setting-btn" data-display="analog">アナログのみ</button>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <h3>時間形式</h3>
+                <div class="setting-options">
+                    <button class="setting-btn active" data-time="24">24時間</button>
+                    <button class="setting-btn" data-time="12">12時間</button>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <h3>日付表示</h3>
+                <div class="setting-options">
+                    <button class="setting-btn active" data-date="show">表示</button>
+                    <button class="setting-btn" data-date="hide">非表示</button>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <h3>秒表示</h3>
+                <div class="setting-options">
+                    <button class="setting-btn active" data-seconds="show">表示</button>
+                    <button class="setting-btn" data-seconds="hide">非表示</button>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <h3>フォント</h3>
+                <select id="font-selector">
+                    <option value="Arial">Arial</option>
+                    <option value="'Helvetica'">Helvetica</option>
+                    <option value="'Times New Roman'">Times New Roman</option>
+                    <option value="'Courier New'">Courier New</option>
+                    <option value="'Roboto'">Roboto</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let settings = {
+            display: 'both',
+            timeFormat: '24',
+            showDate: true,
+            showSeconds: true,
+            font: 'Arial'
+        };
+
+        function updateClock() {
+            const now = new Date();
+            
+            // デジタル時計の更新
+            let hours = now.getHours();
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            
+            if (settings.timeFormat === '12') {
+                hours = hours % 12 || 12;
+            }
+            hours = String(hours).padStart(2, '0');
+
+            let timeStr = `${hours}:${minutes}`;
+            if (settings.showSeconds) {
+                timeStr += `:${seconds}`;
+            }
+            if (settings.timeFormat === '12') {
+                timeStr += now.getHours() >= 12 ? ' PM' : ' AM';
+            }
+            
+            document.getElementById('digital-clock').textContent = timeStr;
+
+            // 日付と曜日の更新
+            if (settings.showDate) {
+                const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+                document.getElementById('date').textContent = now.toLocaleDateString('ja-JP', dateOptions);
+                
+                const weekdays = ['日曜日', '月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日'];
+                document.getElementById('day-of-week').textContent = weekdays[now.getDay()];
+            } else {
+                document.getElementById('date').textContent = '';
+                document.getElementById('day-of-week').textContent = '';
+            }
+
+            // アナログ時計の更新
+            const hourDeg = (now.getHours() % 12) * 30 + now.getMinutes() * 0.5;
+            const minuteDeg = now.getMinutes() * 6 + now.getSeconds() * 0.1;
+            const secondDeg = now.getSeconds() * 6;
+
+            document.querySelector('.hour-hand').style.transform = `rotate(${hourDeg}deg)`;
+            document.querySelector('.minute-hand').style.transform = `rotate(${minuteDeg}deg)`;
+            document.querySelector('.second-hand').style.transform = `rotate(${secondDeg}deg)`;
+
+            // 表示設定の適用
+            const digitalSection = document.querySelector('.digital-section');
+            const analogClock = document.querySelector('.analog-clock');
+
+            digitalSection.style.display = (settings.display === 'both' || settings.display === 'digital') ? 'block' : 'none';
+            analogClock.style.display = (settings.display === 'both' || settings.display === 'analog') ? 'block' : 'none';
+        }
+
+        // モーダル制御
+        document.querySelector('.settings-btn').addEventListener('click', () => {
+            document.querySelector('.modal').style.display = 'flex';
+        });
+
+        document.querySelector('.close-modal').addEventListener('click', () => {
+            document.querySelector('.modal').style.display = 'none';
+        });
+
+        // 設定ボタンのイベントリスナー
+        document.querySelectorAll('.setting-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const category = Object.keys(e.target.dataset)[0];
+                const value = e.target.dataset[category];
+                
+                // 同じカテゴリーの他のボタンから active クラスを削除
+                e.target.parentElement.querySelectorAll('.setting-btn').forEach(b => {
+                    b.classList.remove('active');
+                });
+                e.target.classList.add('active');
+
+                // 設定を更新
+                switch(category) {
+                    case 'display':
+                        settings.display = value;
+                        break;
+                    case 'time':
+                        settings.timeFormat = value;
+                        break;
+                    case 'date':
+                        settings.showDate = value === 'show';
+                        break;
+                    case 'seconds':
+                        settings.showSeconds = value === 'show';
+                        break;
+                }
+                updateClock();
+            });
+        });
+
+        // フォント変更
+        document.getElementById('font-selector').addEventListener('change', function(e) {
+            settings.font = e.target.value;
+            document.getElementById('digital-clock').style.fontFamily = settings.font;
+        });
+
+        // 時計の更新を開始
+        setInterval(updateClock, 1000);
+        updateClock();
+    </script>
+</body>
+</html>
