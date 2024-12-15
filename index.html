@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modern Web Clock</title>
+    <title>Modern Web Clock with BGM</title>
     <style>
         * {
             margin: 0;
@@ -121,6 +121,7 @@
             border-radius: 15px;
             min-width: 300px;
             color: #fff;
+            position: relative;
         }
 
         .setting-group {
@@ -174,6 +175,37 @@
             border-radius: 5px;
             width: 100%;
             margin-top: 5px;
+        }
+
+        .audio-controls {
+            margin-top: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .audio-upload-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        #custom-audio-upload {
+            display: none;
+        }
+
+        .custom-file-upload {
+            display: inline-block;
+            padding: 8px 16px;
+            cursor: pointer;
+            background-color: #333;
+            color: #fff;
+            border-radius: 5px;
+        }
+
+        .audio-filename {
+            color: #888;
+            margin-left: 10px;
         }
     </style>
 </head>
@@ -243,8 +275,31 @@
                     <option value="'Roboto'">Roboto</option>
                 </select>
             </div>
+
+            <div class="setting-group">
+                <h3>BGM</h3>
+                <div class="audio-controls">
+                    <div class="setting-options">
+                        <button class="setting-btn" data-bgm="default">デフォルト音楽</button>
+                        <button class="setting-btn" data-bgm="custom">カスタム音楽</button>
+                        <button class="setting-btn active" data-bgm="off">OFF</button>
+                    </div>
+                    <div class="audio-upload-container">
+                        <label for="custom-audio-upload" class="custom-file-upload">
+                            音楽をアップロード
+                        </label>
+                        <input type="file" id="custom-audio-upload" accept="audio/*">
+                        <span id="audio-filename" class="audio-filename"></span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+
+    <audio id="bgm-player" loop>
+        <source src="music/music.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
 
     <script>
         let settings = {
@@ -252,8 +307,14 @@
             timeFormat: '24',
             showDate: true,
             showSeconds: true,
-            font: 'Arial'
+            font: 'Arial',
+            bgmMode: 'off',
+            customAudioSrc: null
         };
+
+        const bgmPlayer = document.getElementById('bgm-player');
+        const customAudioUpload = document.getElementById('custom-audio-upload');
+        const audioFilename = document.getElementById('audio-filename');
 
         function updateClock() {
             const now = new Date();
@@ -307,6 +368,27 @@
             analogClock.style.display = (settings.display === 'both' || settings.display === 'analog') ? 'block' : 'none';
         }
 
+        function updateBGM() {
+            bgmPlayer.pause();
+            bgmPlayer.currentTime = 0;
+
+            switch(settings.bgmMode) {
+                case 'default':
+                    bgmPlayer.src = 'music/music.mp3';
+                    bgmPlayer.play();
+                    break;
+                case 'custom':
+                    if (settings.customAudioSrc) {
+                        bgmPlayer.src = settings.customAudioSrc;
+                        bgmPlayer.play();
+                    }
+                    break;
+                case 'off':
+                    // BGM is already stopped
+                    break;
+            }
+        }
+
         // モーダル制御
         document.querySelector('.settings-btn').addEventListener('click', () => {
             document.querySelector('.modal').style.display = 'flex';
@@ -342,6 +424,10 @@
                     case 'seconds':
                         settings.showSeconds = value === 'show';
                         break;
+                    case 'bgm':
+                        settings.bgmMode = value;
+                        updateBGM();
+                        break;
                 }
                 updateClock();
             });
@@ -351,6 +437,18 @@
         document.getElementById('font-selector').addEventListener('change', function(e) {
             settings.font = e.target.value;
             document.getElementById('digital-clock').style.fontFamily = settings.font;
+        });
+
+        // カスタム音楽アップロード
+        customAudioUpload.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                audioFilename.textContent = file.name;
+                settings.customAudioSrc = URL.createObjectURL(file);
+                
+                // 自動的にカスタム音楽モードに切り替え
+                document.querySelector('[data-bgm="custom"]').click();
+            }
         });
 
         // 時計の更新を開始
