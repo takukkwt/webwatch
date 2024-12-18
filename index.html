@@ -1,10 +1,20 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web時計</title>
+    <title>Modern Web Clock with BGM</title>
     <style>
+        :root {
+            --digital-font-size: 6em;
+            --analog-size: 300px;
+            --bg-color: #1a1a1a;
+            --hour-hand-color: #ffffff;
+            --minute-hand-color: #ffffff;
+            --second-hand-color: #ff6b6b;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -17,10 +27,11 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            background-color: #1a1a1a;
+            background-color: var(--bg-color);
             color: #ffffff;
             font-family: 'Arial', sans-serif;
             position: relative;
+            transition: background-color 0.3s;
         }
 
         .main-container {
@@ -35,9 +46,10 @@
         }
 
         #digital-clock {
-            font-size: 6em;
+            font-size: var(--digital-font-size);
             font-weight: 300;
             letter-spacing: 2px;
+            transition: font-size 0.3s;
         }
 
         #date, #day-of-week {
@@ -47,12 +59,13 @@
         }
 
         .analog-clock {
-            width: 300px;
-            height: 300px;
+            width: var(--analog-size);
+            height: var(--analog-size);
             border: 2px solid #333;
             border-radius: 50%;
             position: relative;
             background-color: #222;
+            transition: width 0.3s, height 0.3s;
         }
 
         .hand {
@@ -60,32 +73,33 @@
             bottom: 50%;
             left: 50%;
             transform-origin: bottom center;
+            transition: background-color 0.3s;
         }
 
         .hour-hand {
             width: 4px;
             height: 25%;
-            background-color: #fff;
+            background-color: var(--hour-hand-color);
         }
 
         .minute-hand {
             width: 3px;
             height: 35%;
-            background-color: #fff;
+            background-color: var(--minute-hand-color);
         }
 
         .second-hand {
             width: 2px;
             height: 40%;
-            background-color: #ff6b6b;
+            background-color: var(--second-hand-color);
         }
 
         .center-dot {
-            position: absolute;
             width: 12px;
             height: 12px;
             background-color: #fff;
             border-radius: 50%;
+            position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
@@ -120,12 +134,15 @@
             padding: 30px;
             border-radius: 15px;
             min-width: 300px;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
             color: #fff;
             position: relative;
         }
 
         .setting-group {
-            margin: 15px 0;
+            margin: 20px 0;
         }
 
         .setting-group h3 {
@@ -136,6 +153,7 @@
         .setting-options {
             display: flex;
             gap: 10px;
+            flex-wrap: wrap;
         }
 
         .setting-btn {
@@ -152,8 +170,62 @@
             background-color: #ff6b6b;
         }
 
-        .setting-btn:hover {
-            background-color: #444;
+        .slider-container {
+            width: 100%;
+            margin: 10px 0;
+        }
+
+        .slider {
+            width: 100%;
+            height: 5px;
+            background: #333;
+            outline: none;
+            -webkit-appearance: none;
+            border-radius: 5px;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 15px;
+            height: 15px;
+            background: #ff6b6b;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .color-picker {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin: 5px 0;
+        }
+
+        .color-picker label {
+            min-width: 100px;
+        }
+
+        .color-picker input[type="color"] {
+            height: 30px;
+            width: 60px;
+            padding: 0;
+            border: none;
+            background: none;
+            cursor: pointer;
+        }
+
+        .preset-colors {
+            display: flex;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .color-preset {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid #444;
         }
 
         .close-modal {
@@ -177,33 +249,62 @@
             margin-top: 5px;
         }
 
-        .audio-controls {
-            margin-top: 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+        .value-display {
+            color: #888;
+            font-size: 0.9em;
+            margin-left: 10px;
         }
 
-        .audio-upload-container {
+        .hidden {
+            display: none !important;
+        }
+
+        /* BGM関連のスタイル */
+        .bgm-controls {
             display: flex;
-            gap: 10px;
             align-items: center;
+            gap: 10px;
+            margin-top: 15px;
         }
 
-        #custom-audio-upload {
+        .bgm-controls label {
+            color: #888;
+            margin-right: 10px;
+        }
+
+        #bgm-start-time {
+            width: 80px;
+            background-color: #333;
+            color: #fff;
+            border: none;
+            padding: 5px;
+            border-radius: 5px;
+        }
+
+        #bgm-volume {
+            flex-grow: 1;
+        }
+
+        .bgm-file-upload {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        #bgm-upload {
             display: none;
         }
 
         .custom-file-upload {
-            display: inline-block;
-            padding: 8px 16px;
-            cursor: pointer;
             background-color: #333;
             color: #fff;
+            padding: 8px 16px;
             border-radius: 5px;
+            cursor: pointer;
         }
 
-        .audio-filename {
+        #bgm-filename {
             color: #888;
             margin-left: 10px;
         }
@@ -250,6 +351,14 @@
             </div>
 
             <div class="setting-group">
+                <h3>秒表示</h3>
+                <div class="setting-options">
+                    <button class="setting-btn active" data-seconds="show">表示</button>
+                    <button class="setting-btn" data-seconds="hide">非表示</button>
+                </div>
+            </div>
+
+            <div class="setting-group">
                 <h3>日付表示</h3>
                 <div class="setting-options">
                     <button class="setting-btn active" data-date="show">表示</button>
@@ -258,10 +367,47 @@
             </div>
 
             <div class="setting-group">
-                <h3>秒表示</h3>
-                <div class="setting-options">
-                    <button class="setting-btn active" data-seconds="show">表示</button>
-                    <button class="setting-btn" data-seconds="hide">非表示</button>
+                <h3>デジタル時計のサイズ</h3>
+                <div class="slider-container">
+                    <input type="range" min="3" max="12" value="6" class="slider" id="digital-size-slider">
+                    <span class="value-display">6em</span>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <h3>アナログ時計のサイズ</h3>
+                <div class="slider-container">
+                    <input type="range" min="200" max="500" value="300" class="slider" id="analog-size-slider">
+                    <span class="value-display">300px</span>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <h3>背景色</h3>
+                <div class="color-picker">
+                    <input type="color" id="bg-color" value="#1a1a1a">
+                </div>
+                <div class="preset-colors">
+                    <div class="color-preset" style="background-color: #1a1a1a"></div>
+                    <div class="color-preset" style="background-color: #2c3e50"></div>
+                    <div class="color-preset" style="background-color: #34495e"></div>
+                    <div class="color-preset" style="background-color: #000000"></div>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <h3>アナログ時計の針の色</h3>
+                <div class="color-picker">
+                    <label>時針</label>
+                    <input type="color" id="hour-hand-color" value="#ffffff">
+                </div>
+                <div class="color-picker">
+                    <label>分針</label>
+                    <input type="color" id="minute-hand-color" value="#ffffff">
+                </div>
+                <div class="color-picker">
+                    <label>秒針</label>
+                    <input type="color" id="second-hand-color" value="#ff6b6b">
                 </div>
             </div>
 
@@ -277,183 +423,313 @@
             </div>
 
             <div class="setting-group">
-                <h3>BGM</h3>
-                <div class="audio-controls">
-                    <div class="setting-options">
-                        <button class="setting-btn" data-bgm="default">デフォルト音楽(Side Path)</button>
-                        <button class="setting-btn" data-bgm="custom">カスタム音楽</button>
-                        <button class="setting-btn active" data-bgm="off">OFF</button>
-                    </div>
-                    <div class="audio-upload-container">
-                        <label for="custom-audio-upload" class="custom-file-upload">
-                            音楽をアップロード
-                        </label>
-                        <input type="file" id="custom-audio-upload" accept="audio/*">
-                        <span id="audio-filename" class="audio-filename"></span>
-                    </div>
+                <h3>BGM設定</h3>
+                <div class="bgm-controls">
+                    <button id="bgm-toggle" class="setting-btn">BGM再生</button>
+                    <label for="bgm-start-time">開始時間:</label>
+                    <input type="number" id="bgm-start-time" min="0" value="0" step="1">秒
+                </div>
+                <div class="bgm-controls">
+                    <label>音量:</label>
+                    <input type="range" id="bgm-volume" min="0" max="100" value="50">
+                    <span id="volume-display">50%</span>
+                </div>
+                <div class="bgm-file-upload">
+                    <label for="bgm-upload" class="custom-file-upload">音楽ファイルを選択</label>
+                    <input type="file" id="bgm-upload" accept="audio/mp3">
+                    <span id="bgm-filename">music/music.mp3</span>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- BGM再生用の隠しオーディオ要素 -->
     <audio id="bgm-player" loop>
         <source src="music/music.mp3" type="audio/mpeg">
-        Your browser does not support the audio element.
     </audio>
 
     <script>
+        // 設定オブジェクト
         let settings = {
             display: 'both',
             timeFormat: '24',
-            showDate: true,
             showSeconds: true,
+            showDate: true,
             font: 'Arial',
-            bgmMode: 'off',
-            customAudioSrc: null
+            digitalSize: '6',
+            analogSize: '300',
+            bgColor: '#1a1a1a',
+            hourHandColor: '#ffffff',
+            minuteHandColor: '#ffffff',
+            secondHandColor: '#ff6b6b',
+            // BGM関連の設定を追加
+            bgmEnabled: false,
+            bgmVolume: 50,
+            bgmStartTime: 0,
+            bgmFilePath: 'music/music.mp3'
         };
 
+        // DOM要素の取得
+        const digitalClock = document.getElementById('digital-clock');
+        const dateDisplay = document.getElementById('date');
+        const dayOfWeekDisplay = document.getElementById('day-of-week');
+        const analogClock = document.querySelector('.analog-clock');
+        const hourHand = document.querySelector('.hour-hand');
+        const minuteHand = document.querySelector('.minute-hand');
+        const secondHand = document.querySelector('.second-hand');
+<!-- (Previous HTML and beginning of script remain the same) -->
+           // (Previous settings and DOM selections remain the same)
+
+        const settingsBtn = document.querySelector('.settings-btn');
+        const modal = document.querySelector('.modal');
+        const closeModal = document.querySelector('.close-modal');
+
+        // BGM関連の要素取得
         const bgmPlayer = document.getElementById('bgm-player');
-        const customAudioUpload = document.getElementById('custom-audio-upload');
-        const audioFilename = document.getElementById('audio-filename');
+        const bgmToggle = document.getElementById('bgm-toggle');
+        const bgmStartTime = document.getElementById('bgm-start-time');
+        const bgmVolume = document.getElementById('bgm-volume');
+        const volumeDisplay = document.getElementById('volume-display');
+        const bgmUpload = document.getElementById('bgm-upload');
+        const bgmFilename = document.getElementById('bgm-filename');
+
+        // 日本語の曜日配列
+        const weekDays = ['日', '月', '火', '水', '木', '金', '土'];
 
         function updateClock() {
             const now = new Date();
-            
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+            const month = now.getMonth() + 1;
+            const date = now.getDate();
+            const day = now.getDay();
+
             // デジタル時計の更新
-            let hours = now.getHours();
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-            
+            let timeString = '';
             if (settings.timeFormat === '12') {
-                hours = hours % 12 || 12;
-            }
-            hours = String(hours).padStart(2, '0');
-
-            let timeStr = `${hours}:${minutes}`;
-            if (settings.showSeconds) {
-                timeStr += `:${seconds}`;
-            }
-            if (settings.timeFormat === '12') {
-                timeStr += now.getHours() >= 12 ? ' PM' : ' AM';
-            }
-            
-            document.getElementById('digital-clock').textContent = timeStr;
-
-            // 日付と曜日の更新
-            if (settings.showDate) {
-                const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
-                document.getElementById('date').textContent = now.toLocaleDateString('ja-JP', dateOptions);
-                
-                const weekdays = ['日曜日', '月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日'];
-                document.getElementById('day-of-week').textContent = weekdays[now.getDay()];
+                const ampm = hours >= 12 ? '午後' : '午前';
+                const hours12 = hours % 12 || 12;
+                timeString = `${ampm} ${hours12}:${String(minutes).padStart(2, '0')}`;
             } else {
-                document.getElementById('date').textContent = '';
-                document.getElementById('day-of-week').textContent = '';
+                timeString = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+            }
+
+            if (settings.showSeconds) {
+                timeString += `:${String(seconds).padStart(2, '0')}`;
+            }
+
+            digitalClock.textContent = timeString;
+
+            // 日付の更新
+            if (settings.showDate) {
+                dateDisplay.textContent = `${month}月${date}日`;
+                dayOfWeekDisplay.textContent = `${weekDays[day]}曜日`;
+            } else {
+                dateDisplay.textContent = '';
+                dayOfWeekDisplay.textContent = '';
             }
 
             // アナログ時計の更新
-            const hourDeg = (now.getHours() % 12) * 30 + now.getMinutes() * 0.5;
-            const minuteDeg = now.getMinutes() * 6 + now.getSeconds() * 0.1;
-            const secondDeg = now.getSeconds() * 6;
+            const hourDeg = (hours % 12) * 30 + minutes * 0.5;
+            const minuteDeg = minutes * 6;
+            const secondDeg = seconds * 6;
 
-            document.querySelector('.hour-hand').style.transform = `rotate(${hourDeg}deg)`;
-            document.querySelector('.minute-hand').style.transform = `rotate(${minuteDeg}deg)`;
-            document.querySelector('.second-hand').style.transform = `rotate(${secondDeg}deg)`;
-
-            // 表示設定の適用
-            const digitalSection = document.querySelector('.digital-section');
-            const analogClock = document.querySelector('.analog-clock');
-
-            digitalSection.style.display = (settings.display === 'both' || settings.display === 'digital') ? 'block' : 'none';
-            analogClock.style.display = (settings.display === 'both' || settings.display === 'analog') ? 'block' : 'none';
+            hourHand.style.transform = `rotate(${hourDeg}deg)`;
+            minuteHand.style.transform = `rotate(${minuteDeg}deg)`;
+            secondHand.style.transform = `rotate(${secondDeg}deg)`;
         }
 
-        function updateBGM() {
-            bgmPlayer.pause();
-            bgmPlayer.currentTime = 0;
+        // BGMの再生/停止
+        bgmToggle.addEventListener('click', function() {
+            if (bgmPlayer.paused) {
+                bgmPlayer.play();
+                bgmToggle.textContent = 'BGM停止';
+                bgmToggle.classList.add('active');
+                settings.bgmEnabled = true;
+            } else {
+                bgmPlayer.pause();
+                bgmToggle.textContent = 'BGM再生';
+                bgmToggle.classList.remove('active');
+                settings.bgmEnabled = false;
+            }
+        });
 
-            switch(settings.bgmMode) {
-                case 'default':
-                    bgmPlayer.src = 'music/music.mp3';
-                    bgmPlayer.play();
-                    break;
-                case 'custom':
-                    if (settings.customAudioSrc) {
-                        bgmPlayer.src = settings.customAudioSrc;
+        // BGM開始時間の設定
+        bgmStartTime.addEventListener('change', function() {
+            const startTime = parseFloat(this.value);
+            bgmPlayer.currentTime = startTime;
+            settings.bgmStartTime = startTime;
+        });
+
+        // 音量調整
+        bgmVolume.addEventListener('input', function() {
+            const volume = this.value / 100;
+            bgmPlayer.volume = volume;
+            volumeDisplay.textContent = `${this.value}%`;
+            settings.bgmVolume = this.value;
+        });
+
+        // ファイルアップロード
+        bgmUpload.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    bgmPlayer.src = event.target.result;
+                    bgmFilename.textContent = file.name;
+                    settings.bgmFilePath = event.target.result;
+                    bgmPlayer.load();
+                    
+                    // アップロード後に再生していた場合は再生を継続
+                    if (!bgmPlayer.paused) {
                         bgmPlayer.play();
                     }
-                    break;
-                case 'off':
-                    // BGM is already stopped
-                    break;
+                };
+                reader.readAsDataURL(file);
             }
-        }
-
-        // モーダル制御
-        document.querySelector('.settings-btn').addEventListener('click', () => {
-            document.querySelector('.modal').style.display = 'flex';
         });
 
-        document.querySelector('.close-modal').addEventListener('click', () => {
-            document.querySelector('.modal').style.display = 'none';
-        });
-
-        // 設定ボタンのイベントリスナー
-        document.querySelectorAll('.setting-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const category = Object.keys(e.target.dataset)[0];
-                const value = e.target.dataset[category];
+        // 表示形式の切り替え
+        document.querySelectorAll('[data-display]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const display = this.dataset.display;
+                settings.display = display;
                 
-                // 同じカテゴリーの他のボタンから active クラスを削除
-                e.target.parentElement.querySelectorAll('.setting-btn').forEach(b => {
-                    b.classList.remove('active');
-                });
-                e.target.classList.add('active');
+                document.querySelectorAll('[data-display]').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
 
-                // 設定を更新
-                switch(category) {
-                    case 'display':
-                        settings.display = value;
+                switch(display) {
+                    case 'both':
+                        digitalClock.parentElement.classList.remove('hidden');
+                        analogClock.classList.remove('hidden');
                         break;
-                    case 'time':
-                        settings.timeFormat = value;
+                    case 'digital':
+                        digitalClock.parentElement.classList.remove('hidden');
+                        analogClock.classList.add('hidden');
                         break;
-                    case 'date':
-                        settings.showDate = value === 'show';
-                        break;
-                    case 'seconds':
-                        settings.showSeconds = value === 'show';
-                        break;
-                    case 'bgm':
-                        settings.bgmMode = value;
-                        updateBGM();
+                    case 'analog':
+                        digitalClock.parentElement.classList.add('hidden');
+                        analogClock.classList.remove('hidden');
                         break;
                 }
-                updateClock();
+            });
+        });
+
+        // 時間形式の切り替え
+        document.querySelectorAll('[data-time]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                settings.timeFormat = this.dataset.time;
+                document.querySelectorAll('[data-time]').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // 秒表示の切り替え
+        document.querySelectorAll('[data-seconds]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                settings.showSeconds = this.dataset.seconds === 'show';
+                document.querySelectorAll('[data-seconds]').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // 日付表示の切り替え
+        document.querySelectorAll('[data-date]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                settings.showDate = this.dataset.date === 'show';
+                document.querySelectorAll('[data-date]').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                if (settings.showDate) {
+                    dateDisplay.style.display = 'block';
+                    dayOfWeekDisplay.style.display = 'block';
+                } else {
+                    dateDisplay.style.display = 'none';
+                    dayOfWeekDisplay.style.display = 'none';
+                }
             });
         });
 
         // フォント変更
         document.getElementById('font-selector').addEventListener('change', function(e) {
             settings.font = e.target.value;
-            document.getElementById('digital-clock').style.fontFamily = settings.font;
+            document.body.style.fontFamily = settings.font;
         });
 
-        // カスタム音楽アップロード
-        customAudioUpload.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                audioFilename.textContent = file.name;
-                settings.customAudioSrc = URL.createObjectURL(file);
-                
-                // 自動的にカスタム音楽モードに切り替え
-                document.querySelector('[data-bgm="custom"]').click();
+        // デジタル時計のサイズ調整
+        document.getElementById('digital-size-slider').addEventListener('input', function(e) {
+            settings.digitalSize = e.target.value;
+            document.documentElement.style.setProperty('--digital-font-size', `${e.target.value}em`);
+            e.target.nextElementSibling.textContent = `${e.target.value}em`;
+        });
+
+        // アナログ時計のサイズ調整
+        document.getElementById('analog-size-slider').addEventListener('input', function(e) {
+            settings.analogSize = e.target.value;
+            document.documentElement.style.setProperty('--analog-size', `${e.target.value}px`);
+            e.target.nextElementSibling.textContent = `${e.target.value}px`;
+        });
+
+        // 背景色の変更
+        document.getElementById('bg-color').addEventListener('input', function(e) {
+            settings.bgColor = e.target.value;
+            document.documentElement.style.setProperty('--bg-color', e.target.value);
+        });
+
+        // 針の色の変更
+        document.getElementById('hour-hand-color').addEventListener('input', function(e) {
+            settings.hourHandColor = e.target.value;
+            document.documentElement.style.setProperty('--hour-hand-color', e.target.value);
+        });
+
+        document.getElementById('minute-hand-color').addEventListener('input', function(e) {
+            settings.minuteHandColor = e.target.value;
+            document.documentElement.style.setProperty('--minute-hand-color', e.target.value);
+        });
+
+        document.getElementById('second-hand-color').addEventListener('input', function(e) {
+            settings.secondHandColor = e.target.value;
+            document.documentElement.style.setProperty('--second-hand-color', e.target.value);
+        });
+
+        // プリセットカラーの処理
+        document.querySelectorAll('.color-preset').forEach(preset => {
+            preset.addEventListener('click', function() {
+                const color = this.style.backgroundColor;
+                document.getElementById('bg-color').value = rgbToHex(color);
+                document.documentElement.style.setProperty('--bg-color', color);
+                settings.bgColor = color;
+            });
+        });
+
+        // RGB to Hex変換関数
+        function rgbToHex(rgb) {
+            const rgbArray = rgb.match(/\d+/g);
+            return "#" + rgbArray.map(x => {
+                const hex = parseInt(x).toString(16);
+                return hex.length === 1 ? "0" + hex : hex;
+            }).join('');
+        }
+
+        // モーダルの表示/非表示
+        settingsBtn.addEventListener('click', () => {
+            modal.style.display = 'flex';
+        });
+
+        closeModal.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
             }
         });
 
         // 時計の更新を開始
         setInterval(updateClock, 1000);
-        updateClock();
+        updateClock(); // 初回実行
     </script>
 </body>
 </html>
